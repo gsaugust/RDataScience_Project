@@ -1,81 +1,71 @@
 ---
-title: "I have the best titles"
-author: Your name here
-subtitle: Subtitle here if desired
+title: "Deforestation and Development in Indochina"
+author: "Garrett Augustyn"
 ---
 
 # Introduction
-My really awesome and complete introduction will go here.  
-
-> I know words.  I have the best words.  ~ Donald Trump
-
-# Materials and methods
-
-Narrative and most code will go here.  Describe what you are doing and show how to do it (with code).
-
-You can do bullets like this:
-
-* The first most important thing
-* The second most important thing
-* The third most important thing
-
-You can do numbers like this:
-
-1. The first most important thing
-2. The second most important thing
-3. The third most important thing
-
-See [http://rmarkdown.rstudio.com/](http://rmarkdown.rstudio.com/) for all the amazing things you can do.
+Southeast Asia is amongst the fastest growing regional economies in the world. With booms in manufacturing, energy, tourism, and palm oil production, the region faces rapid growth in development and infrastructure. The region is also host to one of 25 biodiversity hotspots in the world, containing tropical rainforests and expansive wetlands. This study evaluates how expansive and rapid the agent of deforestation is enveloping the region, in wake of rapid development between 2005 and 2015. If a country's economy has experienced a rapid surge between 2005 and 2015, then the rate and magnitude of deforestation will also increase to coincide with economic expansion. The study area will examine historic Indochina; Myanmar, Thailand, Laos, Cambodia, and Vietnam. The area of forest lost in each country is compared with economic indices such as GDP to show the relationship between economic development and the area of forest lost in the region. Deforestation mapping using data from The World Bank and the Sustainable Society Index is used in conjunction with remotely sensed data to visualize the magnitude of forest loss. Based upon the results, international efforts in the promotion of sustainable forestry can be directed appropriately to countries of rapid deforestation. 
 
 
-Here's my first code chunk.
+
+# Methods
+
 ```{r}
-1+2
-```
 
-Load any required packages in a code chunk (you may need to install some packages):
 
-```{r, message=F, warning=F}
-library(dplyr)
-library(ggplot2)
-library(maps)
-library(spocc)
-knitr::opts_chunk$set(cache=TRUE)  # cache the results for quick compiling
+
+
 ```
 
 
-We are going to use the `occ()` function to download _occurrence_ records for the American robin (_Turdus migratorius_) from the [Global Biodiversity Information Facility](gbif.org).
-
-<img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/Turdus-migratorius-002.jpg" alt="alt text" width="200">
-<small><small><small>Licensed under CC BY-SA 3.0 via [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Turdus-migratorius-002.jpg#/media/File:Turdus-migratorius-002.jpg)</small></small></small>
 
 ```{r, warning=F} 
-## define which species to query
-sp='Turdus migratorius'
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
 
-## run the query and convert to data.frame()
-d = occ(query=sp, from='ebird',limit = 100) %>% occ2df()
 ```
-This can take a few seconds.
 
-```{r, fig.width=6, fig.height=3, fig.cap="Map illustrating the known occurrence locations"}
-# Load coastline
-map=map_data("world")
 
-ggplot(d,aes(x=longitude,y=latitude))+
-  geom_polygon(aes(x=long,y=lat,group=group),data=map)+
-  geom_point(col="red")+
-  coord_equal()
-```
+
 
 
 # Results
 
-Show tables, plots, etc. and describe them.
 
-# Conclusions
 
-What have you learned?  Are there any broader implications?
+```{r}
 
-# References
+download.file("http://api.worldbank.org/v2/en/indicator/AG.LND.FRST.ZS?downloadformat=csv",destfile = "data/forest.zip")
+unzip("data/forest.zip",exdir = "data")
+Forest_data<-read.csv("data/API_AG.LND.FRST.ZS_DS2_en_csv_v2.csv",skip=4)
+
+
+Forest_filter<- dplyr::filter(Forest_data,Forest_data$Country.Name=="Thailand" |Forest_data$Country.Name=="Cambodia"|Forest_data$Country.Name=="Vietnam"|Forest_data$Country.Name=="Myanmar"|Forest_data$Country.Name=="Lao PDR")
+For_subset<-subset(Forest_filter,select=-c(5:49,61:62)) 
+
+Forest_G<-gather(For_subset,"Year","Forest",5:15)
+
+Forest_Plot<-ggplot(Forest_G,aes(x=Year,y=Forest,color=Country.Name))
+
+Forest_Plot+
+  geom_point()
+
+download.file("http://api.worldbank.org/v2/en/indicator/NY.GDP.MKTP.CD?downloadformat=csv",destfile = "data/GDP.zip")
+unzip("data/GDP.zip",exdir = "data")
+GDP<-read.csv("data/API_NY.GDP.MKTP.CD_DS2_en_csv_v2.csv",skip=4)
+
+
+GDP_filter<-dplyr::filter(GDP,GDP$Country.Name=="Thailand"|GDP$Country.Name=="Cambodia"|GDP$Country.Name=="Vietnam"|GDP$Country.Name=="Myanmar"|GDP$Country.Name=="Lao PDR")
+GDP_subset<-subset(GDP_filter,select=-c(5:49,61:62)) 
+
+GDP_G<-gather(GDP_subset,"Year","GDP",5:15)
+
+GDP_Plot<-ggplot(GDP_G,aes(x=Year,y=GDP,color=Country.Name))
+  
+GDP_Plot+
+  geom_point()
+
+```
+
 
