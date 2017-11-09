@@ -326,7 +326,9 @@ library(tidyverse)</code></pre>
 <pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
 <pre><code>## filter(): dplyr, stats
 ## lag():    dplyr, stats</code></pre>
-<pre class="r"><code># Results</code></pre>
+</div>
+<div id="results" class="section level1">
+<h1>Results</h1>
 <pre class="r"><code>download.file(&quot;http://api.worldbank.org/v2/en/indicator/AG.LND.FRST.ZS?downloadformat=csv&quot;,destfile = &quot;data/forest.zip&quot;)
 unzip(&quot;data/forest.zip&quot;,exdir = &quot;data&quot;)
 Forest_data&lt;-read.csv(&quot;data/API_AG.LND.FRST.ZS_DS2_en_csv_v2.csv&quot;,skip=4)
