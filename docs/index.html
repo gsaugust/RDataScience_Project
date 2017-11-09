@@ -326,9 +326,7 @@ library(tidyverse)</code></pre>
 <pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
 <pre><code>## filter(): dplyr, stats
 ## lag():    dplyr, stats</code></pre>
-</div>
-<div id="results" class="section level1">
-<h1>Results</h1>
+<pre class="r"><code># Results</code></pre>
 <pre class="r"><code>download.file(&quot;http://api.worldbank.org/v2/en/indicator/AG.LND.FRST.ZS?downloadformat=csv&quot;,destfile = &quot;data/forest.zip&quot;)
 unzip(&quot;data/forest.zip&quot;,exdir = &quot;data&quot;)
 Forest_data&lt;-read.csv(&quot;data/API_AG.LND.FRST.ZS_DS2_en_csv_v2.csv&quot;,skip=4)
@@ -337,13 +335,15 @@ Forest_data&lt;-read.csv(&quot;data/API_AG.LND.FRST.ZS_DS2_en_csv_v2.csv&quot;,s
 Forest_filter&lt;- dplyr::filter(Forest_data,Forest_data$Country.Name==&quot;Thailand&quot; |Forest_data$Country.Name==&quot;Cambodia&quot;|Forest_data$Country.Name==&quot;Vietnam&quot;|Forest_data$Country.Name==&quot;Myanmar&quot;|Forest_data$Country.Name==&quot;Lao PDR&quot;)
 For_subset&lt;-subset(Forest_filter,select=-c(5:49,61:62)) 
 
-Forest_G&lt;-gather(For_subset,&quot;Year&quot;,&quot;Forest&quot;,5:15)
+Forest_G&lt;-gather(For_subset,&quot;Year&quot;,&quot;Forest&quot;,5:15)%&gt;%
+  mutate(Year=(sub(&quot;X&quot;,&quot;&quot;,Year)))
 
-Forest_Plot&lt;-ggplot(Forest_G,aes(x=Year,y=Forest,color=Country.Name))
+
+Forest_Plot&lt;-ggplot(Forest_G,aes(x=Year,y=Forest,group=Country.Name))
 
 Forest_Plot+
-  geom_point()</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+  geom_line(aes(color=factor(Country.Name)))+labs(title=&quot;Percent of Forested Area&quot;,y=&quot;Percent of Area Forested&quot;,color=&quot;Country&quot;)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
 <pre class="r"><code>download.file(&quot;http://api.worldbank.org/v2/en/indicator/NY.GDP.MKTP.CD?downloadformat=csv&quot;,destfile = &quot;data/GDP.zip&quot;)
 unzip(&quot;data/GDP.zip&quot;,exdir = &quot;data&quot;)
 GDP&lt;-read.csv(&quot;data/API_NY.GDP.MKTP.CD_DS2_en_csv_v2.csv&quot;,skip=4)
@@ -352,13 +352,14 @@ GDP&lt;-read.csv(&quot;data/API_NY.GDP.MKTP.CD_DS2_en_csv_v2.csv&quot;,skip=4)
 GDP_filter&lt;-dplyr::filter(GDP,GDP$Country.Name==&quot;Thailand&quot;|GDP$Country.Name==&quot;Cambodia&quot;|GDP$Country.Name==&quot;Vietnam&quot;|GDP$Country.Name==&quot;Myanmar&quot;|GDP$Country.Name==&quot;Lao PDR&quot;)
 GDP_subset&lt;-subset(GDP_filter,select=-c(5:49,61:62)) 
 
-GDP_G&lt;-gather(GDP_subset,&quot;Year&quot;,&quot;GDP&quot;,5:15)
+GDP_G&lt;-gather(GDP_subset,&quot;Year&quot;,&quot;GDP&quot;,5:15)%&gt;%
+  mutate(Year=(sub(&quot;X&quot;,&quot;&quot;,Year)))
 
-GDP_Plot&lt;-ggplot(GDP_G,aes(x=Year,y=GDP,color=Country.Name))
+GDP_Plot&lt;-ggplot(GDP_G,aes(x=Year,y=GDP,group=Country.Name))
   
 GDP_Plot+
-  geom_point()</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
+  geom_line(aes(color=factor(Country.Name)))+labs(title=&quot;GDP&quot;,y=&quot;GDP (US$)&quot;,color=&quot;Country&quot;)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-2-2.png" width="672" /></p>
 </div>
 
 <!-- give the footer some space -->

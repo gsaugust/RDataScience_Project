@@ -10,12 +10,6 @@ Southeast Asia is amongst the fastest growing regional economies in the world. W
 
 # Methods
 
-```{r}
-
-
-
-
-```
 
 
 
@@ -24,15 +18,13 @@ library(dplyr)
 library(ggplot2)
 library(tidyverse)
 
-```
+
 
 
 
 
 
 # Results
-
-
 
 ```{r}
 
@@ -44,12 +36,17 @@ Forest_data<-read.csv("data/API_AG.LND.FRST.ZS_DS2_en_csv_v2.csv",skip=4)
 Forest_filter<- dplyr::filter(Forest_data,Forest_data$Country.Name=="Thailand" |Forest_data$Country.Name=="Cambodia"|Forest_data$Country.Name=="Vietnam"|Forest_data$Country.Name=="Myanmar"|Forest_data$Country.Name=="Lao PDR")
 For_subset<-subset(Forest_filter,select=-c(5:49,61:62)) 
 
-Forest_G<-gather(For_subset,"Year","Forest",5:15)
+Forest_G<-gather(For_subset,"Year","Forest",5:15)%>%
+  mutate(Year=(sub("X","",Year)))
 
-Forest_Plot<-ggplot(Forest_G,aes(x=Year,y=Forest,color=Country.Name))
+
+Forest_Plot<-ggplot(Forest_G,aes(x=Year,y=Forest,group=Country.Name))
 
 Forest_Plot+
-  geom_point()
+  geom_line(aes(color=factor(Country.Name)))+labs(title="Percent of Forested Area",y="Percent of Area Forested",color="Country")
+
+ 
+  
 
 download.file("http://api.worldbank.org/v2/en/indicator/NY.GDP.MKTP.CD?downloadformat=csv",destfile = "data/GDP.zip")
 unzip("data/GDP.zip",exdir = "data")
@@ -59,13 +56,21 @@ GDP<-read.csv("data/API_NY.GDP.MKTP.CD_DS2_en_csv_v2.csv",skip=4)
 GDP_filter<-dplyr::filter(GDP,GDP$Country.Name=="Thailand"|GDP$Country.Name=="Cambodia"|GDP$Country.Name=="Vietnam"|GDP$Country.Name=="Myanmar"|GDP$Country.Name=="Lao PDR")
 GDP_subset<-subset(GDP_filter,select=-c(5:49,61:62)) 
 
-GDP_G<-gather(GDP_subset,"Year","GDP",5:15)
+GDP_G<-gather(GDP_subset,"Year","GDP",5:15)%>%
+  mutate(Year=(sub("X","",Year)))
 
-GDP_Plot<-ggplot(GDP_G,aes(x=Year,y=GDP,color=Country.Name))
+GDP_Plot<-ggplot(GDP_G,aes(x=Year,y=GDP,group=Country.Name))
   
 GDP_Plot+
-  geom_point()
+  geom_line(aes(color=factor(Country.Name)))+labs(title="GDP",y="GDP (US$)",color="Country")
+
+
+
 
 ```
+
+
+
+
 
 
