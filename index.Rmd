@@ -46,7 +46,6 @@ Forest_Plot+
 
  
   
-
 download.file("http://api.worldbank.org/v2/en/indicator/NY.GDP.MKTP.CD?downloadformat=csv",destfile = "data/GDP.zip")
 unzip("data/GDP.zip",exdir = "data")
 GDP<-read.csv("data/API_NY.GDP.MKTP.CD_DS2_en_csv_v2.csv",skip=4)
@@ -63,7 +62,62 @@ GDP_Plot<-ggplot(GDP_G,aes(x=Year,y=GDP,group=Country.Name))
 GDP_Plot+
   geom_line(aes(color=factor(Country.Name)))+labs(title="GDP",y="GDP (US$)",color="Country")
 
+download.file("http://gfw2-data.s3.amazonaws.com/country/umd_country_stats/tree_cover_stats_2016.xlsx",destfile="data/TCover")
 
+readxl::read_xls("data/TCover.xlsx")
+
+TCstats=readxl::read_xlsx("data/TCstats.xlsx","Loss (2001-2016) by Country",skip=1)
+
+
+TCsub=subset(TCstats,select=(c(6:16,91:101,108:118)))                               
+
+TCFilter=filter(TCsub,TCsub$Country=="Thailand"|TCsub$Country=="Cambodia"|TCsub$Country=="Vietnam"|TCsub$Country=="Myanmar"|TCsub$Country=="Laos")
+
+## Aggregates
+Tree10=select(TCFilter,1:12)
+Tree10$totalsum=rowSums(Tree10[,-1])
+
+Tree50=select(TCFilter,1,13:23)
+Tree50$totalsum=rowSums(Tree50[,-1])
+
+Tree75=select(TCFilter,1,24:34)
+Tree75$totalsum=rowSums(Tree75[,-1])
+
+## World 50 for Comaprison using TCSub
+
+## Spatial Elements, Join create 3 mps
+
+## Interactive nonesense
+
+##Happy days
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+#do the seperate selectionsand define, mutate, then after have all of them cbind to make one table
+# Aggregate Loss over 10 year 3 maps
+# getdata world=getdata("countries")
+# maptools data("wrld_simpl")
+#sf package and ISO3 
+#cbind and select statements
+
+geojson <- readLines("json/countries.geojson", warn = FALSE)%>%
+  paste(collapse = "\n") %>%
+  fromJSON(simplifyVector = FALSE)
 
 
 ```
