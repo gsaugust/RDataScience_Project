@@ -1,11 +1,13 @@
 ---
 title: "Visualizing Deforestation and Development in Indochina"
 author: "Garrett Augustyn"
+
+
 ---
 
 # Introduction
-Southeast Asia is amongst the fastest growing regional economies in the world. With booms in manufacturing, energy, tourism, and palm oil production, the region faces rapid growth in development and infrastructure. The region is also host to one of 25 biodiversity hotspots in the world, containing tropical rainforests and expansive wetlands. This study evaluates how expansive and rapid the agent of deforestation is enveloping the region, in wake of rapid development between 2005 and 2015. If a country's economy has experienced a rapid surge between 2005 and 2015, then the rate and magnitude of deforestation will also increase to coincide with economic expansion. The study area will examine historic Indochina; Myanmar, Thailand, Laos, Cambodia, and Vietnam. The area of forest lost in each country is compared with economic indices such as GDP to visualize the relationship between economic development and the area of forest lost in the region. Deforestation mapping using data from The World Bank and the Sustainable Society Index is used to visualize the magnitude of forest loss. Based upon the results, international efforts in the promotion of sustainable forestry can be directed appropriately to countries of rapid deforestation. 
 
+Southeast Asia is amongst the fastest growing regional economies in the world. With booms in manufacturing, energy, tourism, and palm oil production, the region faces rapid growth in development and infrastructure. The region is also host to one of 25 biodiversity hotspots in the world, containing tropical rainforests and expansive wetlands. This study evaluates how expansive and rapid the agent of deforestation is enveloping the region, in wake of rapid development between 2005 and 2015. If a country's economy has experienced a rapid surge between 2005 and 2015, then the rate and magnitude of deforestation will also increase to coincide with economic expansion. The study area will examine historic Indochina; Myanmar, Thailand, Laos, Cambodia, and Vietnam. The area of forest lost in each country is compared with economic indices such as GDP to visualize the relationship between economic development and the area of forest lost in the region. Deforestation mapping using data from The World Bank and the Sustainable Society Index is used to visualize the magnitude of forest loss. Based upon the results, international efforts in the promotion of sustainable forestry can be directed appropriately to countries of rapid deforestation. 
 
 
 # Methods 
@@ -20,29 +22,13 @@ library(maptools)
 library(leaflet)
 library(RColorBrewer)
 library(rworldmap)
+library(prettydoc)
 
 ```
 
-# Results
-Gross Domestic Product (GDP) is displayed as an economic development indicator as Percent of Total Land Forested was selected to evaluate trends in forest biomass in the region. No correlations are calculated, however yearly values can be interpreted from the plots. Both of these variables are found in data that is drawn from the World Bank Group. The package tidyverse is used to manipulate the data, as ggplot2 is used to display the following graphs.
-```{r}
+## GDP
 
-download.file("http://api.worldbank.org/v2/en/indicator/AG.LND.FRST.ZS?downloadformat=csv",destfile = "data/forest.zip")
-unzip("data/forest.zip",exdir = "data")
-Forest_data<-read.csv("data/API_AG.LND.FRST.ZS_DS2_en_csv_v2.csv",skip=4)
-
-
-Forest_filter<- dplyr::filter(Forest_data,Forest_data$Country.Name=="Thailand" |Forest_data$Country.Name=="Cambodia"|Forest_data$Country.Name=="Vietnam"|Forest_data$Country.Name=="Myanmar"|Forest_data$Country.Name=="Lao PDR")
-For_subset<-subset(Forest_filter,select=-c(5:49,61:62)) 
-
-Forest_G<-gather(For_subset,"Year","Forest",5:15)%>%
-  mutate(Year=(sub("X","",Year)))
-
-
-Forest_Plot<-ggplot(Forest_G,aes(x=Year,y=Forest,group=Country.Name))
-
-Forest_Plot+
-  geom_line(aes(color=factor(Country.Name)))+labs(title="Percent of Forested Area",y="Percent of Area Forested",color="Country")
+```{r,warning=F}
 
 download.file("http://api.worldbank.org/v2/en/indicator/NY.GDP.MKTP.CD?downloadformat=csv",destfile = "data/GDP.zip")
 unzip("data/GDP.zip",exdir = "data")
@@ -55,17 +41,79 @@ GDP_subset<-subset(GDP_filter,select=-c(5:49,61:62))
 GDP_G<-gather(GDP_subset,"Year","GDP",5:15)%>%
   mutate(Year=(sub("X","",Year)))
 
-GDP_Plot<-ggplot(GDP_G,aes(x=Year,y=GDP,group=Country.Name))
-  
-GDP_Plot+
-  geom_line(aes(color=factor(Country.Name)))+labs(title="GDP",y="GDP (US$)",color="Country")
 
 
 ```
+
+## Forest Trends
+
+```{r,warning=F}
+download.file("http://api.worldbank.org/v2/en/indicator/AG.LND.FRST.ZS?downloadformat=csv",destfile = "data/forest.zip")
+unzip("data/forest.zip",exdir = "data")
+Forest_data<-read.csv("data/API_AG.LND.FRST.ZS_DS2_en_csv_v2.csv",skip=4)
+
+
+Forest_filter<- dplyr::filter(Forest_data,Forest_data$Country.Name=="Thailand" |Forest_data$Country.Name=="Cambodia"|Forest_data$Country.Name=="Vietnam"|Forest_data$Country.Name=="Myanmar"|Forest_data$Country.Name=="Lao PDR")
+For_subset<-subset(Forest_filter,select=-c(5:49,61:62)) 
+
+Forest_G<-gather(For_subset,"Year","Forest",5:15)%>%
+  mutate(Year=(sub("X","",Year)))
+
+```
+
+## GDP and Forest Change
+
+```{r}
+
+GDPF_join=left_join(GDP_G,Forest_G,by=c("Country.Name","Year"))
+
+GDPF_plot=ggplot(GDPF_join,aes(x=GDP,y=Forest,group=Country.Name))
+
+GDPF_colors=c("2005"="#a6cee3","2006"="#1f78b4","2007"="#b2df8a","2008"="#33a02c","2009"="#fb9a99","2010"="#e31a1c","2011"="#fdbf6f","2012"="#ff7f00","2013"="#cab2d6","2014"="#6a3d9a","2015"="#b15928")
+
+GDPF_shape=c(15,16,17,18,7)
+
+GDPF_plot+
+  geom_point(aes(color=(as.character(Year)),shape=Country.Name,size=1))+
+  labs(title="GDP and Forest Change (2005-2015)",shape="Country",color="Year",y="Percent of Forested Land Area")+
+  scale_color_manual(values=GDPF_colors)+
+  scale_shape_manual(values =GDPF_shape)
+  
+# used discrete(sp) qualitative values to make country by year comparisons easier
+
+
+
+```
+
+# Results
+
+Gross Domestic Product (GDP) is displayed as an economic development indicator as Percent of Total Land Forested was selected to evaluate trends in forest biomass in the region. No correlations are calculated, however yearly values can be interpreted from the plots. Both of these variables are found in data that is drawn from the World Bank Group. The package tidyverse is used to manipulate the data, as ggplot2 is used to display the following graphs.
+
+```{r, warning=F} 
+
+
+Forest_Plot<-ggplot(Forest_G,aes(x=Year,y=Forest,group=Country.Name))
+
+Forest_Plot+
+  geom_line(aes(color=factor(Country.Name)))+labs(title="Percent of Forested Land Area",y="Percent of Forested Land Area",color="Country")
+
+GDP_color=c()
+
+GDP_Plot<-ggplot(GDP_G,aes(x=Year,y=GDP,group=Country.Name))
+  
+GDP_Plot+
+  geom_line(aes(color=factor(Country.Name)))+labs(title="GDP",y="GDP (US$)",color="Country")+
+  scale_shape_manual(values =)
+  
+
+
+```
+ 
+ 
  All maps below display the forest cover lost in 2005, 2010, and 2015 to evaluate and visulize regional trends over the decade. Due to variation is research methodology a "net" tree loss cannot be calculated by comparing tree loss and tree gain (Hansen et.al.). The aggregate loss is the sum of the ten year period of tree cover loss in hectares. This data comes with high variability as certain countries The data was subdivided into forest area cover. To get a large sample, analysis was run on 10% canopy density, 50% canopy density, and 75% canopy density. Tree cover canopy density (TCC) is defined as a remotley sensed pixel that was covered by tree canopy in the year 2000 (Hansen et al). The tree cover data originates from the Global Forest Watch.
 
 
-```{r}
+```{r, warning=F}
 
 TCstats=readxl::read_xlsx("data/TCstats.xlsx","Loss (2001-2016) by Country",skip=1)
 
@@ -90,7 +138,7 @@ W_agg$totalsum=rowSums(W_agg[,-1])
 
 
 
-Wjoin=joinCountryData2Map(W_agg,joinCode = "NAME",nameJoinColumn = "Country")
+
 
 T10Join=joinCountryData2Map(Tree10,joinCode = "NAME",nameJoinColumn = "Country")
 
@@ -104,79 +152,249 @@ T75Join=joinCountryData2Map(Tree75,joinCode = "NAME",nameJoinColumn = "Country")
 The values of the global scale 10 year aggregate values are difficult to display due to such a wide range of values. The classifications are designed to best visualize the ranges of deforestation globally. Aggregate forest loss is displayed at 50% tree cover canopy density, the suggested global value according to the Global Forest Watch.
 
 
-```{r}
+```{r, warning=F}
 
 
-bins <- c(0, 500000, 1000000, 5000000, 10000000, 20000000, Inf)
-pal <- colorBin("Reds", domain = na.omit(Wjoin$totalsum), bins = bins)
+download.file("http://api.worldbank.org/v2/en/indicator/AG.LND.FRST.K2?downloadformat=csv",destfile="data/Forestareatotal.zip")
+unzip("data/Forestareatotal.zip",exdir = "data")
+FA_total=read.csv("data/Forestareatotal/API_AG.LND.FRST.K2_DS2_en_csv_v2.csv",skip = 4)
 
-Web_MD=leaflet(Wjoin)%>%
-  addProviderTiles(providers$CartoDB.Positron)
+FAT_sel=select(FA_total,1,50:60)
+FAT_sel$Country.Name=as.character(FAT_sel$Country.Name)
+FAT_sel[128,1]="Laos"
+FAT_sel[201,1]="Russia"
+FAT_sel[111,1]="Iran"
+FAT_sel[66,1]="Egypt"
+FAT_sel[42,1]="Democratic Republic of the Congo"
+FAT_sel[220,1]="Slovakia"
+FAT_sel[253,1]="Venezuela"
+FAT_sel[43,1]="Republic of Congo"
+FAT_sel[261,1]="Yemen"
+FAT_sel[121,1]="Kyrgyzstan"
+FAT_sel[226,1]="Syria"
 
-TCWebmap=Web_MD%>%
-  addPolygons(fillColor = ~pal(totalsum),
+
+
+# Multiplied by 100 to convert area in kms^2 to hectares
+FAT_sel$areasum=rowSums(FAT_sel[,-1])
+FAT_sel$Hectarea=FAT_sel$areasum*100
+
+
+colnames(FAT_sel)[colnames(FAT_sel)=="Country.Name"] <- "Country"
+Wag_Fat_join=left_join(W_agg,FAT_sel,by="Country")
+JN=mutate(Wag_Fat_join,tloss=(totalsum/Hectarea)*100)
+JN_join=joinCountryData2Map(JN,joinCode = "NAME",nameJoinColumn = "Country")
+
+Forest_G<-gather(For_subset,"Year","Forest",5:15)%>%
+  mutate(Year=(sub("X","",Year)))
+
+#Yearly Loss
+
+Yearlytot=gather(FAT_sel,"Year","Area",2:12)%>%
+  mutate(Year=sub("X","",Year))
+Yearlyloss=gather(W_agg,"Year","Loss",2:12)%>%
+  mutate(Year=sub("__5","",Year))
+
+
+Year_join=left_join(Yearlytot,Yearlyloss,by=c("Year","Country"))
+Year_join$Harea=Year_join$Area*100
+YJN=mutate(Year_join,losspercent=(Loss/Harea)*100)
+
+SEA_Year_05=filter(YJN,YJN$Country=="Thailand"|YJN$Country=="Cambodia"|YJN$Country=="Vietnam"|YJN$Country=="Myanmar"|YJN$Country=="Laos",YJN$Year=="2005")
+
+SEA_Year_06=filter(YJN,YJN$Country=="Thailand"|YJN$Country=="Cambodia"|YJN$Country=="Vietnam"|YJN$Country=="Myanmar"|YJN$Country=="Laos",YJN$Year=="2006")
+
+SEA_Year_07=filter(YJN,YJN$Country=="Thailand"|YJN$Country=="Cambodia"|YJN$Country=="Vietnam"|YJN$Country=="Myanmar"|YJN$Country=="Laos",YJN$Year=="2007")
+
+SEA_Year_08=filter(YJN,YJN$Country=="Thailand"|YJN$Country=="Cambodia"|YJN$Country=="Vietnam"|YJN$Country=="Myanmar"|YJN$Country=="Laos",YJN$Year=="2008")
+
+SEA_Year_09=filter(YJN,YJN$Country=="Thailand"|YJN$Country=="Cambodia"|YJN$Country=="Vietnam"|YJN$Country=="Myanmar"|YJN$Country=="Laos",YJN$Year=="2009")
+
+SEA_Year_10=filter(YJN,YJN$Country=="Thailand"|YJN$Country=="Cambodia"|YJN$Country=="Vietnam"|YJN$Country=="Myanmar"|YJN$Country=="Laos",YJN$Year=="2010")
+
+SEA_Year_11=filter(YJN,YJN$Country=="Thailand"|YJN$Country=="Cambodia"|YJN$Country=="Vietnam"|YJN$Country=="Myanmar"|YJN$Country=="Laos",YJN$Year=="2011")
+
+SEA_Year_12=filter(YJN,YJN$Country=="Thailand"|YJN$Country=="Cambodia"|YJN$Country=="Vietnam"|YJN$Country=="Myanmar"|YJN$Country=="Laos",YJN$Year=="2012")
+
+SEA_Year_13=filter(YJN,YJN$Country=="Thailand"|YJN$Country=="Cambodia"|YJN$Country=="Vietnam"|YJN$Country=="Myanmar"|YJN$Country=="Laos",YJN$Year=="2013")
+
+SEA_Year_14=filter(YJN,YJN$Country=="Thailand"|YJN$Country=="Cambodia"|YJN$Country=="Vietnam"|YJN$Country=="Myanmar"|YJN$Country=="Laos",YJN$Year=="2014")
+
+SEA_Year_15=filter(YJN,YJN$Country=="Thailand"|YJN$Country=="Cambodia"|YJN$Country=="Vietnam"|YJN$Country=="Myanmar"|YJN$Country=="Laos",YJN$Year=="2015")
+
+
+join_05=joinCountryData2Map(SEA_Year_05,joinCode = "NAME",nameJoinColumn = "Country")
+
+join_06=joinCountryData2Map(SEA_Year_06,joinCode = "NAME",nameJoinColumn = "Country")
+
+join_07=joinCountryData2Map(SEA_Year_07,joinCode = "NAME",nameJoinColumn = "Country")
+
+join_08=joinCountryData2Map(SEA_Year_08,joinCode = "NAME",nameJoinColumn = "Country")
+
+join_09=joinCountryData2Map(SEA_Year_09,joinCode = "NAME",nameJoinColumn = "Country")
+
+join_10=joinCountryData2Map(SEA_Year_10,joinCode = "NAME",nameJoinColumn = "Country")
+
+join_11=joinCountryData2Map(SEA_Year_11,joinCode = "NAME",nameJoinColumn = "Country")
+
+join_12=joinCountryData2Map(SEA_Year_12,joinCode = "NAME",nameJoinColumn = "Country")
+
+join_13=joinCountryData2Map(SEA_Year_13,joinCode = "NAME",nameJoinColumn = "Country")
+
+join_14=joinCountryData2Map(SEA_Year_14,joinCode = "NAME",nameJoinColumn = "Country")
+
+join_15=joinCountryData2Map(SEA_Year_15,joinCode = "NAME",nameJoinColumn = "Country")
+
+bins_05 <- c(30000,50000,75000,100000,125000,Inf)
+pal_05 <- colorBin("Reds", domain = join_05$Loss, bins = bins_05)
+
+
+WY_map=leaflet(join_05)%>%
+  fitBounds(90.1,9.4,110.8,26)%>%
+  addProviderTiles(providers$CartoDB.Positron)%>%
+  addPolygons(fillColor = ~pal_05(Loss),
               fillOpacity = 0.7, 
               weight=1,
               color="grey",
               highlight=highlightOptions(weight=3, 
               color="#666",bringToFront=TRUE),
-              label=Wjoin$Country)
+              label=join_05$Country,
+              group= "2005")%>%
+  addPolygons(data=join_06,
+              fillColor = ~pal_05(Loss),
+              fillOpacity = 0.7, 
+              weight=1,
+              color="grey",
+              highlight=highlightOptions(weight=3, 
+              color="#666",bringToFront=TRUE),
+              label=join_06$Country,
+              group= "2006")%>%
+  addPolygons(data=join_07,
+              fillColor = ~pal_05(Loss),
+              fillOpacity = 0.7, 
+              weight=1,
+              color="grey",
+              highlight=highlightOptions(weight=3, 
+              color="#666",bringToFront=TRUE),
+              label=join_07$Country,
+              group= "2007")%>%
+  addPolygons(data=join_08,
+              fillColor = ~pal_05(Loss),
+              fillOpacity = 0.7, 
+              weight=1,
+              color="grey",
+              highlight=highlightOptions(weight=3, 
+              color="#666",bringToFront=TRUE),
+              label=join_08$Country,
+              group= "2008")%>%
+  addPolygons(data=join_09,
+              fillColor = ~pal_05(Loss),
+              fillOpacity = 0.7, 
+              weight=1,
+              color="grey",
+              highlight=highlightOptions(weight=3, 
+              color="#666",bringToFront=TRUE),
+              label=join_09$Country,
+              group= "2009")%>%
+  addPolygons(data=join_10,
+              fillColor = ~pal_05(Loss),
+              fillOpacity = 0.7, 
+              weight=1,
+              color="grey",
+              highlight=highlightOptions(weight=3, 
+              color="#666",bringToFront=TRUE),
+              label=join_10$Country,
+              group= "2010")%>%
+  addPolygons(data=join_11,
+              fillColor = ~pal_05(Loss),
+              fillOpacity = 0.7, 
+              weight=1,
+              color="grey",
+              highlight=highlightOptions(weight=3, 
+              color="#666",bringToFront=TRUE),
+              label=join_11$Country,
+              group= "2011")%>%
+  addPolygons(data=join_12,
+              fillColor = ~pal_05(Loss),
+              fillOpacity = 0.7, 
+              weight=1,
+              color="grey",
+              highlight=highlightOptions(weight=3, 
+              color="#666",bringToFront=TRUE),
+              label=join_12$Country,
+              group= "2012")%>%
+  addPolygons(data=join_13,
+              fillColor = ~pal_05(Loss),
+              fillOpacity = 0.7, 
+              weight=1,
+              color="grey",
+              highlight=highlightOptions(weight=3, 
+              color="#666",bringToFront=TRUE),
+              label=join_13$Country,
+              group= "2013")%>%
+  addPolygons(data=join_14,
+              fillColor = ~pal_05(Loss),
+              fillOpacity = 0.7, 
+              weight=1,
+              color="grey",
+              highlight=highlightOptions(weight=3, 
+              color="#666",bringToFront=TRUE),
+              label=join_14$Country,
+              group= "2014")%>%
+  addPolygons(data=join_15,
+              fillColor = ~pal_05(Loss),
+              fillOpacity = 0.7, 
+              weight=1,
+              color="grey",
+              highlight=highlightOptions(weight=3, 
+              color="#666",bringToFront=TRUE),
+              label=join_15$Country,
+              group= "2015")%>%
+  addLayersControl(overlayGroups=c("2005","2006","2007","2008","2009","2010","2011","2012","2013","2014","2015"),options = layersControlOptions(collapsed = FALSE)
+  )%>%
+  hideGroup(c("2006","2007","2008","2009","2010","2011","2012","2013","2014","2015"))
 
+
+  
+WY_map%>%
+  addLegend(pal=pal_05,(values=~join_06$Loss),title="Tree Cover Loss (Ha)",position="bottomleft")
+
+```
+
+```{r,warning=F}
+
+bins <- c(0,0.5, 1,5,10,15,20,Inf)
+pal <- colorBin("Reds", domain = na.omit(JN_join$tloss), bins = bins)
+
+web_map=leaflet(JN_join)%>%
+  addProviderTiles(providers$CartoDB.Positron)
+
+
+TCWebmap=web_map%>%
+  addPolygons(fillColor = ~pal(tloss),
+              fillOpacity = 0.7, 
+              weight=1,
+              color="grey",
+              highlight=highlightOptions(weight=3, 
+              color="#666",bringToFront=TRUE),
+              label=paste(round(JN_join$tloss,2),"%"))
+
+## !0 year aggregate
                               
 TCWebmap%>%
-  addLegend(pal=pal,(values=~Wjoin$totalsum),title="10 Year Tree Cover Loss (Ha)",position="bottomright")
+  addLegend(pal=pal,(values=~JN_join$tloss),title="Tree Cover Loss Percent (Ha)",position="bottomright")
+
+
 ```
-# Forest Loss in Hectares (2005-2015)
-The forest loss in the years of 2005, 2010, and 2015 are used as samples to display trends in country to country comparison. Each year is displayed with 10% canopy density, 50% canopy density, and 75% canopy density to encompass the wide range in forest cover evaluation. 
 
-```{r}
-
-mapCountryData(mapToPlot = T10Join,nameColumnToPlot = "2005",xlim = c(91,110),ylim = c(4,29),mapTitle = "10% Tree Cover Canopy Density 2005",oceanCol = "lightblue",missingCountryCol = "white",borderCol = "black",colourPalette = c("green","yellow","orange","red"))
-
-labelCountries(dF=T10Join,nameCountryColumn = "Country",col="black")
-
-mapCountryData(mapToPlot = T10Join,nameColumnToPlot = "2010",xlim = c(91,110),ylim = c(4,29),mapTitle = "10% Tree Cover Canopy Density 2010",oceanCol = "lightblue",missingCountryCol = "white",borderCol = "black",colourPalette = c("green","yellow","orange","red"))
-
-labelCountries(dF=T10Join,nameCountryColumn = "Country",col="black")
-
-
-mapCountryData(mapToPlot = T10Join,nameColumnToPlot = "2015",xlim = c(91,110),ylim = c(4,29),mapTitle = "10% Tree Cover Canopy Density 2015",oceanCol = "lightblue",missingCountryCol = "white",borderCol = "black",colourPalette = c("green","yellow","orange","red"))
-
-labelCountries(dF=T10Join,nameCountryColumn = "Country",col="black")
-
-
-T50map=mapCountryData(mapToPlot = T50Join,nameColumnToPlot = "2005__5",xlim = c(91,110),ylim = c(4,29),mapTitle = "50% Tree Cover Canopy Density 2005",oceanCol = "lightblue",missingCountryCol = "white",borderCol = "black",colourPalette = c("green","yellow","orange","red"))
-
-labelCountries(dF=T50Join,nameCountryColumn = "Country",col="black")
-
-T50map=mapCountryData(mapToPlot = T50Join,nameColumnToPlot = "2010__5",xlim = c(91,110),ylim = c(4,29),mapTitle = "50% Tree Cover Canopy Density 2010",oceanCol = "lightblue",missingCountryCol = "white",borderCol = "black",colourPalette = c("green","yellow","orange","red"))
-
-labelCountries(dF=T50Join,nameCountryColumn = "Country",col="black")
-
-T50map=mapCountryData(mapToPlot = T50Join,nameColumnToPlot = "2015__5",xlim = c(91,110),ylim = c(4,29),mapTitle = "50% Tree Cover Canopy Density 2015",oceanCol = "lightblue",missingCountryCol = "white",borderCol = "black",colourPalette = c("green","yellow","orange","red"))
-
-labelCountries(dF=T50Join,nameCountryColumn = "Country",col="black")
-
-
-
-mapCountryData(mapToPlot = T75Join,nameColumnToPlot = "2005__6",xlim = c(91,110),ylim = c(4,29),mapTitle = "75% Tree Cover Canopy Density 2005",oceanCol = "lightblue",missingCountryCol = "white",borderCol = "black",colourPalette = c("green","yellow","orange","red"))
-
-labelCountries(dF=T75Join,nameCountryColumn = "Country",col="black")
-
-
-mapCountryData(mapToPlot = T75Join,nameColumnToPlot = "2010__6",xlim = c(91,110),ylim = c(4,29),mapTitle = "75% Tree Cover Canopy Density 2010",oceanCol = "lightblue",missingCountryCol = "white",borderCol = "black",colourPalette = c("green","yellow","orange","red"))
-
-labelCountries(dF=T75Join,nameCountryColumn = "Country",col="black")
-
-mapCountryData(mapToPlot = T75Join,nameColumnToPlot = "2015__6",xlim = c(91,110),ylim = c(4,29),mapTitle = "75% Tree Cover Canopy Density 2015",oceanCol = "lightblue",missingCountryCol = "white",borderCol = "black",colourPalette = c("green","yellow","orange","red"))
-
-labelCountries(dF=T75Join,nameCountryColumn = "Country",col="black")
+```{r, warning=F}
 
 
  
 ```
 
-#Results
+# Results
+
 As expected, the results are variable. According to the graphs only Cmbodia and Myanmar are decreasing in total forested area. Thailand remains fairly consistent in forested area, as Vietnam and Laos are experiencing increases in forested area. Myanmar is the only country in the region witnessing both gain in GDP, and loss in forested area. According to the graphs, Vietnam is gaining in both GDP and forested area. 
 
 The region of Indochina is experiencing a moderate trend in decadal aggregate forest loss in comparison with the rest of the globe. Due to the incredible range of the global data, regional comparison is essential. From 10% forest canopy coverage through 75% forest canopy coverage, there are dynamic trends over the ten year period. Thailand remains at a low rate of deforestation throughout the decade. Cambodia has a high variability in year to year forest loss, as Myanmar sees a sharp increase, followed by a mellowed decrease. Laos experiences as steady increase in tree cover loss as Vietnam maintains a steady decrease in the decade. Some of these results are incongrous to the graphs produced from data derived from the World Bank. Forest loss is not the same indicator as percent of land area forest, however they are related in nature.
