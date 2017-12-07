@@ -22,7 +22,7 @@ library(maptools)
 library(leaflet)
 library(RColorBrewer)
 library(rworldmap)
-library(prettydoc)
+
 
 ```
 
@@ -139,8 +139,7 @@ bins <- c(0,0.5, 1,5,10,15,20,Inf)
 pal <- colorBin("Reds", domain = na.omit(JN_join$tloss), bins = bins)
 
 web_map=leaflet(JN_join)%>%
-  addProviderTiles(providers$CartoDB.Positron)%>%
-  setView(zoom=1)
+  addProviderTiles(providers$CartoDB.Positron)
 
 
 TCWebmap=web_map%>%
@@ -150,7 +149,7 @@ TCWebmap=web_map%>%
               color="grey",
               highlight=highlightOptions(weight=3, 
               color="#666",bringToFront=TRUE),
-              label=paste(round(JN_join$tloss,2),"% forested area lost"))
+              label=paste(JN_join$Country,round(JN_join$tloss,2),"% forested area lost"))
 
 ```
 
