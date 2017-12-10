@@ -12,7 +12,8 @@ Southeast Asia is amongst the fastest growing regional economies in the world. W
 
 # Methods 
 
-Evaluating forest loss involves the inclusion of a multitude of variables. One must consider that forest loss is a function of natural causes such as forest fires, landslides, disease and many others. The difficulty lies in identifying the exact extent to which anthropogenic stressors lead to tree loss. This is evident in clear cutting, tree harvesting and erossive agricultural behavior. In many cases certain regions of a country gain significant amount of forested land, which makes it difficult to calculate a "budget" for individual countries.  Data visualization is processed with these complex systems in mind.
+In this study I aim to visualize trends in forestry and development over a ten year extent in maps and plots. Evaluating forest loss involves the inclusion of a multitude of variables. One must consider that forest loss is a function of natural causes such as forest fires, landslides, disease and many others. The difficulty lies in identifying the exact extent to which anthropogenic stressors lead to tree loss. This is evident in clear cutting, tree harvesting and erossive agricultural behavior. In many cases certain regions of a country gain significant amount of forested land, which makes it difficult to calculate a "budget" for individual countries. Data visualization is processed with these complex systems in mind.
+ 
 
 ```{r, warning=F,message=F} 
 library(dplyr)
@@ -22,13 +23,13 @@ library(maptools)
 library(leaflet)
 library(RColorBrewer)
 library(rworldmap)
-
+library(sp)
 
 ```
 
 ## GDP and Forest Data Management
 
-Gross Domestic Product (GDP) is displayed as an economic development indicator as Percent of Total Land Forested was selected to evaluate trends in forest biomass in the region.Both of these variables are found in data that is drawn from the World Bank Group. The package dplyr is used to taylor the data to regional characteristics. The tables are designed to display simple temporal  
+Gross Domestic Product (GDP) is displayed as an economic development indicator as Percent of Total Land Forested was selected to evaluate trends in forest biomass in the region. Both of these variables are found in data that is drawn from the World Bank Group. The package dplyr is used to taylor the data to regional characteristics. The tables are designed to display simple characteristic change over time. 
 
 ```{r,warning=F}
 
@@ -62,7 +63,8 @@ plotcolors=c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e")
 
 These tables created above are joined by the "Country.Name" variable to create a comparison table of GDP and Percent of Forested Land. 
 
-## GDP and Forest Change
+
+## GDP and Forest Change join
 
 ```{r}
 
@@ -71,15 +73,13 @@ GDPF_join=left_join(GDP_G,Forest_G,by=c("Country.Name","Year"))
 GDPF_plot=ggplot(GDPF_join,aes(x=GDP,y=Forest,group=Country.Name))
 
 
-# used discrete(sp) qualitative values to make country by year comparisons easier
-
 
 
 ```
 
 ## World Comparison Map
 
- Using leaflet I generated an interactive map displaying total percentage of forest loss over a ten year period (2005-2015). To do this I had to collect data of forest loss from Global Forest Watch. The measurement of canopy loss from this data is in Hectares. A 50% Tree Cover Canopy was selected from the data as the Global Forest Watch suggests such data is most representative for each country. Tree Cover Canopy corrosponds to density of tree cover before loss occured estimated by remotely sensed pixels  (Hansen et.al).
+ Using leaflet, I generated an interactive map displaying total percentage of forest loss over a ten year period (2005-2015). To do this I had to collect data of forest loss from Global Forest Watch. A 50% Tree Cover Canopy was selected from the data. Tree Cover Canopy (TCC), corrosponds to density of tree cover before loss occured estimated by remotely sensed pixels  (Hansen et.al). Global Forest Watch suggests 50% TCC data is most representative for each country.
 
 ```{r, warning=F}
 TCstats=readxl::read_xlsx("data/TCstats.xlsx","Loss (2001-2016) by Country",skip=1)
@@ -94,7 +94,7 @@ W_agg$totalsum=rowSums(W_agg[,-1])
 
 ```
 
-I then had to retrieve total (not percent) land area forested, which is measured in km^2 from the World Bank. Due to different data origins, many country names from the World Bank Data had to manually be renamed for a successful join of the datasets. After the join the ten year total of forest loss was divided by the ten year total of forested land area of each country. This value was multiplied by 100 to make the value a percentage. The new dataset was spatial joined by using the package rworldmap.
+I then had to retrieve total (not percent) land area forested, which is measured in km^2, from the World Bank. Due to different data origins, many country names from the World Bank Data had to be manually renamed for a successful join of the datasets. After the join, the ten year total of forest loss was divided by the ten year total of forested land area of each country. This value was multiplied by 100 to make the value a percentage. The new dataset was spatial joined by using the package rworldmap.
 
 
 ```{r, warning=F}
@@ -130,7 +130,7 @@ JN_join=joinCountryData2Map(JN,joinCode = "NAME",nameJoinColumn = "Country")
 
 ```
 
-After the spatial join I set bin values that would best display the data. Criteria for color scale and labeling are also set in this step.
+After the spatial join I set bin values that would best display the data. The bin values have small divisions as most of the values were assigned at a fraction of a percent. Criteria for color scale and labeling are also set in this step.
 
 
 ```{r, warning=F}
@@ -225,7 +225,7 @@ join_15=joinCountryData2Map(SEA_Year_15,joinCode = "NAME",nameJoinColumn = "Coun
 
 ```
 
-To create the leaflet map, I first assigned appropriate bins for display values. To create a temporal aspect, I created an active map that allows users to turn yearly map layers on and off. This was done with "addLayersControl" in the leaflet package. All layers besides 2005 are turned off until interacted with. 
+To create the leaflet map, I first assigned appropriate bins for display values. To create a temporal aspect, I created an active map that allows users to turn yearly map layers on and off. This was done with "addLayersControl" in the leaflet package. All layers besides 2005 are turned off until interacted with using the hideGroup function. 
 
 ```{r,warning=F}
 
@@ -368,6 +368,9 @@ GDP_Plot+
 
 ```
 
+These plots display GDP and forested area trends through the ten year study period. They can be used as a reference to the more complicated plot below. 
+
+
 ## Forest Change and GDP
 
 ```{r, warning=F} 
@@ -389,7 +392,7 @@ GDPF_plot+
 
 ```
  
-This plot displays Percent of Forested Area as a function of GDP. Countries are defined by shapes, and yearly values are defined by color. A discrete, qualitative color brewer was assigned to the values so distinctions in years by country can be deciphered. Light blue is assigned for 2005, and brown for 2015 to create highly contrasting colors to make trends more visible. By year, as values move to the right it signifies a growth in GDP, as they dip it represents a loss in forest. 
+This plot displays Percent of Forested Area as a function of GDP. Countries are defined by shapes, and yearly values are defined by color. A discrete, qualitative color brewer was assigned to the values so distinctions in years by country can be deciphered. Light blue is assigned for 2005, and brown for 2015 to create highly contrasting colors to make trends more visible. As values move to the right it signifies a growth in GDP, as the values slump downwards it represents a loss in forested area. 
 
 Myanmar and Cambodia are experiencing a positive trend of GDP growth and an increase in forest loss. Thailand experiences a stagnating rate of deforestation but a staggering increase in GDP. Vietnam is increasing in both forested forested land and GDP. Laos experiences a small upward trend in GDP and a large gain in forested area. 
 
@@ -417,9 +420,17 @@ WY_map%>%
 
 ```
 
+
 Through time it is prevelant that each country in the region is experiencing an increase in total forest loss. Myanmar and Laos experience a consistent high level of forest loss year to year. Cambodia has negligible values of forest loss in 2005, but increases forest loss as time goes on. Thailand has a relatively consistent lower level of forest loss in the decadal interval.
 
+# Conclusion
+
+Based upon this study it is inconclusive whether economic development has a signigicant impact on forests in Indochina. Trends can be seen in the visualized data, however they vary greatly between countries and years. One significant trend displayed is that the region is host to higher rates of deforestation than global averages between 2005 and 2015. Thailand has the most stable rates of forested area throughout the ten year interval, while Myanmar and Cambodia are experiencing the most dramatic loss in forested area. Further work on the relationship between physical development (% urban area) needs to be incorporated in the study. Further work in remote sensing would be beneficial in displaying the physical changes in the region. Statistical analysis would benefit the correlation between development and forested area. This study serves as a starting point addressing a pertinent and complicated issue.
+
+
 #References
+
+
 Hansen, M. C., P. V. Potapov, R. Moore, M. Hancher, S. A. Turubanova, A. Tyukavina, D. Thau, S. V. Stehman, S. J. Goetz, T. R. Loveland, A. Kommareddy, A. Egorov, L. Chini, C. O. Justice, and J. R. G. Townshend. 2013. “High-Resolution Global Maps of 21st-Century Forest Cover Change.” Science 342 (15 November): 850–53. Data available on-line from: http://earthenginepartners.appspot.com/science-2013-global-forest. 
 
 World Bank, World Development Indicators (2016). GDP/Forest Area (% of land area)
